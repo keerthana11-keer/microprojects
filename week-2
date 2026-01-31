@@ -1,0 +1,124 @@
+#include <stdio.h>
+#include <stdlib.h>
+struct Node 
+{
+    int id;
+    int start;
+    int size;
+    struct Node *next;
+};
+struct Node *head = NULL;
+/* Insert block in sorted order */
+void addBlock(int id, int start, int size)
+{
+    struct Node *newNode =(struct Node*) malloc(sizeof(struct Node));
+    newNode->id = id;
+    newNode->start = start;
+    newNode->size = size;
+    newNode->next = NULL;
+    if (head == NULL || start < head->start)
+	{
+        newNode->next = head;
+        head = newNode;        
+		return;
+    }
+    struct Node *temp = head;
+    while (temp->next != NULL && temp->next->start < start)
+        temp = temp->next;
+    newNode->next = temp->next;
+    temp->next = newNode;
+}
+/* Allocate memory using First Fit */
+void allocateMemory(int req) 
+{
+    struct Node *temp = head, *prev = NULL;
+    while (temp != NULL) 
+	{
+        if (temp->size >= req) 
+		{
+            printf("Allocated %d bytes from Block %d\n", req, temp->id);
+            temp->start += req;
+            temp->size -= req;
+            if (temp->size == 0) 
+			{
+                if (prev == NULL)
+                    head = temp->next;
+                else
+                    prev->next = temp->next;
+                free(temp);
+            }
+            return;
+        }
+        prev = temp;
+        temp = temp->next;
+    }
+    printf("Out of memory\n");
+}
+/* Free memory and merge adjacent blocks */
+void freeMemory(int id, int start, int size) 
+{
+    addBlock(id, start, size);
+    struct Node *temp = head;
+    while (temp != NULL && temp->next != NULL) 
+	{
+        if (temp->start + temp->size == temp->next->start) 
+		{
+            temp->size += temp->next->size;
+            struct Node *del = temp->next;
+            temp->next = del->next;
+            free(del);
+        } else {
+            temp = temp->next;
+        }
+    }
+}
+/* Display free list */
+void display() 
+{
+    struct Node *temp = head;
+    if (temp == NULL) {
+        printf("Free list is empty\n");
+        return;
+    }
+    printf("ID\tStart\tSize\n");
+    while (temp != NULL) 
+	{
+        printf("%d\t%d\t%d\n", temp->id, temp->start, temp->size);
+        temp = temp->next;
+    }
+}
+int main() 
+{
+    int ch, id, start, size, req;
+    while (1) {
+        printf("\n--- Memory Allocator Menu ---\n");
+        printf("1. Add Free Block\n");
+        printf("2. Allocate Memory\n");
+        printf("3. Free Memory\n");
+        printf("4. Display Free List\n");
+        printf("5. Exit\n");
+        printf("Enter choice: ");
+        scanf("%d", &ch);
+        switch (ch) 
+		{
+            case 1:
+                printf("Enter Block ID, Start Address, Size: ");
+                scanf("%d %d %d", &id, &start, &size);
+                addBlock(id, start, size);
+                break;
+            case 2:
+                printf("Enter memory size to allocate: ");
+                scanf("%d", &req);
+                allocateMemory(req);
+                break;
+            case 3:
+                printf("Enter Block ID, Start Address, Size: ");
+                scanf("%d %d %d", &id, &start, &size);
+                freeMemory(id, start, size);
+                break;
+            case 4:display();break;
+            case 5:return 0;break;
+            default:printf("Invalid choice\n");
+        }
+    }
+}
