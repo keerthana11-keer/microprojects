@@ -1,0 +1,179 @@
+#include<stdio.h>
+#include<stdlib.h>
+#define SIZE 50
+typedef struct
+{
+    int id;
+    char pName[20];
+    int priority;
+    float BT;
+}Process;
+
+int count = 0;
+/* Add process */
+void Add(Process table[], int n)
+{
+    printf("Enter process-%d details\n", count+1);
+    printf("Enter PID: ");
+    scanf("%d",&table[count].id);
+    printf("Enter Process Name: ");
+    scanf("%s", table[count].pName);
+    printf("Enter Priority: ");
+    scanf("%d",&table[count].priority);
+    printf("Enter Burst Time: ");
+    scanf("%f",&table[count].BT);
+    count++;
+}
+/* Display processes */
+void Display(Process table[], int n)
+{
+    int i;
+    for(i=0;i<count;i++)
+    {
+        printf("\nPID=%d\tName=%s\tPriority=%d\tBT=%.2f",
+               table[i].id, table[i].pName,
+               table[i].priority, table[i].BT);
+    }
+    printf("\n");
+}
+
+/* Bubble sort by Priority */
+void BubbleSortByPriority(Process table[], int n)
+{
+    int i,j,comp=0,swap=0;
+    Process temp;
+    for(i=0;i<count;i++)
+    {
+        for(j=0;j<count-i-1;j++)
+        {
+            comp++;
+            if(table[j].priority > table[j+1].priority)
+            {
+                temp = table[j];
+                table[j] = table[j+1];
+                table[j+1] = temp;
+                swap++;
+            }
+        }
+    }
+    printf("\nBubble Sort by Priority Done");
+    printf("\nComparisons = %d", comp);
+    printf("\nSwaps = %d\n", swap);
+}
+/* Insertion sort by PID */
+void InsertionSortByPid(Process table[], int n)
+{
+    int i,j,comp=0,swap=0;
+    Process key;
+    for(i=1;i<count;i++)
+    {
+        key = table[i];
+        j = i-1;
+        while(j>=0 && (++comp && table[j].id > key.id))
+        {
+            table[j+1] = table[j];
+            j--;
+            swap++;
+        }
+        table[j+1] = key;
+    }
+    printf("\nInsertion Sort by PID Done");
+    printf("\nComparisons = %d", comp);
+    printf("\nShifts = %d\n", swap);
+}
+/* Shell sort by Burst Time */
+void shellSortByBT(Process table[], int n)
+{
+    int gap,i,j,comp=0,swap=0;
+    Process temp;
+    for(gap = count/2; gap > 0; gap /= 2)
+    {
+        for(i = gap; i < count; i++)
+        {
+            temp = table[i];
+            j=i;
+            while(j >= gap && (++comp && table[j-gap].BT > temp.BT))
+            {
+                table[j] = table[j-gap];
+                swap++;
+                j = j - gap; 
+            }
+            table[j] = temp;
+        }
+    }
+    printf("\nShell Sort by Burst Time Done");
+    printf("\nComparisons = %d", comp);
+    printf("\nShifts = %d\n", swap);
+}
+
+/* Linear search by PID */
+void linearSearchByPid(Process table[], int n)
+{
+    int key,i,comp=0;
+    printf("Enter PID to search: ");
+    scanf("%d",&key);
+    for(i=0;i<count;i++)
+    {
+        comp++;
+        if(table[i].id == key)
+        {
+            printf("Process Found at position %d", i+1);
+            printf("\nComparisons = %d\n", comp);
+            return;
+        }
+    }
+    printf("Process Not Found");
+    printf("\nComparisons = %d\n", comp);
+}
+/* Binary search by PID (sorted list required) */
+void BinarySearchByPid(Process table[], int n)
+{
+    int key,low=0,high=count-1,mid,comp=0;
+    printf("Enter PID to search: ");
+    scanf("%d",&key);
+    while(low <= high)
+    {
+        comp++;
+        mid = (low + high)/2;
+        if(table[mid].id == key)
+        {
+            printf("Process Found at position %d", mid+1);
+            printf("\nComparisons = %d\n", comp);
+            return;
+        }
+        else if(table[mid].id < key)
+            low = mid + 1;
+        else
+            high = mid - 1;
+    }
+    printf("Process Not Found");
+    printf("\nComparisons = %d\n", comp);
+}
+/* Main */
+int main()
+{
+    Process table[SIZE];
+    int choice;
+    while(1)
+    {
+        printf("\n1.Add\n2.Display\n3.BubbleSortByPriority");
+        printf("\n4.InsertionSortByPid\n5.ShellSortByBT");
+        printf("\n6.LinearSearchByPid\n7.BinarySearchByPid\n8.Exit\n");
+        printf("Enter choice: ");
+        scanf("%d",&choice);
+        switch(choice)
+        {
+            case 1: Add(table,SIZE); break;
+            case 2: Display(table,SIZE); break;
+            case 3: BubbleSortByPriority(table,SIZE); break;
+            case 4: InsertionSortByPid(table,SIZE); break;
+            case 5: shellSortByBT(table,SIZE); break;
+            case 6: linearSearchByPid(table,SIZE); break;
+            case 7:
+                printf("Note: Data must be sorted by PID before Binary Search\n");
+                BinarySearchByPid(table,SIZE);
+                break;
+            case 8: return 0;
+        }
+    }
+}
