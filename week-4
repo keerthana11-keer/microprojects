@@ -1,0 +1,176 @@
+#include <stdio.h>
+#include <ctype.h>
+#include <math.h>
+#define MAX 100
+char cstack[MAX];
+int ctop = -1;
+int istack[MAX];
+int itop = -1;
+/* CHAR STACK OPERATIONS */
+void cpush(char x)
+{
+    cstack[++ctop] = x;
+}
+char cpop()
+{
+    return cstack[ctop--];
+}
+char cpeek()
+{
+    return cstack[ctop];
+}
+/* INT STACK OPERATIONS */
+void ipush(int x)
+{
+    istack[++itop] = x;
+}
+int ipop()
+{
+    return istack[itop--];
+}
+/* 1. BALANCED SYMBOL CHECKER */
+int isBalanced(char exp[])
+{
+    ctop = -1;
+    for(int i = 0; exp[i] != '\0'; i++)
+    {
+        if(exp[i] == '(' || exp[i] == '{' || exp[i] == '[')
+        {
+            cpush(exp[i]);
+        }
+        else if(exp[i] == ')' || exp[i] == '}' || exp[i] == ']')
+        {
+            if(ctop == -1)
+                return 0;
+            char ch = cpop();
+            if((exp[i] == ')' && ch != '(') ||
+               (exp[i] == '}' && ch != '{') ||
+               (exp[i] == ']' && ch != '['))
+                return 0;
+        }
+    }
+    return (ctop == -1);
+}
+/* 2. INFIX TO POSTFIX */
+int priority(char ch)
+{
+    if(ch == '^') return 3;
+    if(ch == '*' || ch == '/') return 2;
+    if(ch == '+' || ch == '-') return 1;
+    return 0;
+}
+void infixToPostfix(char infix[], char postfix[])
+{
+    int k = 0;
+    ctop = -1;
+    for(int i = 0; infix[i] != '\0'; i++)
+    {
+        char ch = infix[i];
+
+        if(isalnum(ch))
+        {
+            postfix[k++] = ch;
+        }
+        else if(ch == '(')
+        {
+            cpush(ch);
+        }
+        else if(ch == ')')
+        {
+            while(cpeek() != '(')
+                postfix[k++] = cpop();
+            cpop(); // remove '('
+        }
+        else
+        {
+            while(ctop != -1 && priority(cpeek()) >= priority(ch))
+                postfix[k++] = cpop();
+            cpush(ch);
+        }
+    }
+    while(ctop != -1)
+        postfix[k++] = cpop();
+    postfix[k] = '\0';
+}
+/* 3. POSTFIX EVALUATION */
+int evaluatePostfix(char exp[])
+{
+    itop = -1;
+    for(int i = 0; exp[i] != '\0'; i++)
+    {
+        if(isdigit(exp[i]))
+        {
+            ipush(exp[i] - '0');
+        }
+        else
+        {
+            int A = ipop();
+            int B = ipop();
+            switch(exp[i])
+            {
+                case '+': ipush(B + A); break;
+                case '-': ipush(B - A); break;
+                case '*': ipush(B * A); break;
+                case '/': ipush(B / A); break;
+                case '^': ipush(pow(B, A)); break;
+            }
+        }
+    }
+    return ipop();
+}
+int main()
+{
+    int choice;
+    char infix[MAX],postfix[MAX];
+    do
+    {
+        printf("\n--- MINI EXPRESSION ENGINE ---\n");
+        printf("1. Check Balanced Symbols\n");
+        printf("2. Convert Infix to Postfix\n");
+        printf("3. Evaluate Postfix\n");
+        printf("4. Convert + Evaluate\n");
+        printf("5. Exit\n");
+        printf("Enter choice: ");
+        scanf("%d", &choice);
+        switch(choice)
+        {
+            case 1:
+                printf("Enter expression: ");
+                scanf("%s", infix);
+                if(isBalanced(infix))
+                    printf("Balanced\n");
+                else
+                    printf("Not Balanced\n");
+                break;
+
+            case 2:
+                printf("Enter infix expression: ");
+                scanf("%s", infix);
+                infixToPostfix(infix, postfix);
+                printf("Postfix expression: %s\n", postfix);
+                break;
+
+            case 3:
+                printf("Enter postfix expression: ");
+                scanf("%s", postfix);
+                printf("Result = %d\n", evaluatePostfix(postfix));
+                break;
+
+            case 4:
+                printf("Enter infix expression: ");
+                scanf("%s", infix);
+                infixToPostfix(infix, postfix);
+                printf("Postfix expression: %s\n", postfix);
+                printf("Result = %d\n", evaluatePostfix(postfix));
+                break;
+
+            case 5:
+                printf("Exiting...\n");
+                break;
+
+            default:
+                printf("Invalid choice\n");
+        }
+    } while(choice != 5);
+    return 0;
+}
