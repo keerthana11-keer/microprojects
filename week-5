@@ -1,0 +1,197 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define MAX 10
+#define TIME_QUANTUM 5
+struct Job
+{
+    int id;
+    char name[20];
+    int time;
+    int priority;
+    struct Job *next;
+};
+struct Job *front = NULL;
+struct Job *rear = NULL;
+struct Job cpuQ[MAX];
+int cqFront = -1;
+int cqRear = -1;
+struct Job history[MAX];
+int hCount = 0;
+
+/* -------- Arrival Queue -------- */
+void enqueueArrival()
+{
+    struct Job *temp = (struct Job *)malloc(sizeof(struct Job));
+    printf("Enter Job ID: ");
+    scanf("%d", &temp->id);
+    printf("Enter Job Name: ");
+    scanf("%s", temp->name);
+    printf("Enter Execution Time (ms): ");
+    scanf("%d", &temp->time);
+    printf("Enter Priority (0-High,1-Medium,2-Low): ");
+    scanf("%d", &temp->priority);
+    temp->next = NULL;
+
+    if (rear == NULL)
+    {
+        front = rear = temp;
+    }
+    else
+    {
+        rear->next = temp;
+        rear = temp;
+    }
+}
+int isArrivalEmpty()
+{
+    if (front == NULL)
+        return 1;
+    return 0;
+}
+struct Job dequeueArrival()
+{
+    struct Job job;
+    struct Job *temp = front;
+    job = *temp;
+    front = front->next;
+
+    if (front == NULL)
+        rear = NULL;
+    free(temp);
+    job.next = NULL;
+    return job;
+}
+
+void displayArrival()
+{
+    struct Job *temp = front;
+    if (temp == NULL)
+    {
+        printf("Arrival Queue Empty\n");
+        return;
+    }
+    printf("\nArrival Queue:\n");
+    while (temp != NULL)
+    {
+        printf("Job[%d] %s Time:%d Priority:%d\n",
+               temp->id, temp->name, temp->time, temp->priority);
+        temp = temp->next;
+    }
+}
+/* -------- Circular Queue -------- */
+int isCPUEmpty()
+{
+    if (cqFront == -1)
+        return 1;
+    return 0;
+}
+int isCPUFull()
+{
+    if ((cqFront == 0 && cqRear == MAX - 1) ||
+        (cqFront == cqRear + 1))
+        return 1;
+    return 0;
+}
+void enqueueCPU(struct Job job)
+{
+    if (isCPUFull())
+    {
+        printf("CPU Queue Full\n");
+        return;
+    }
+    if (cqRear == MAX - 1 && cqFront != 0)
+    {
+        cqRear = -1;
+    }
+    cqRear++;
+    cpuQ[cqRear] = job;
+    if (cqFront == -1)
+    {
+        cqFront = 0;
+    }
+}
+struct Job dequeueCPU()
+{
+    struct Job job = cpuQ[cqFront];
+    cqFront++;
+    if (cqFront == MAX)
+    {
+        cqFront = 0;
+    }
+    if (cqFront - 1 == cqRear)
+    {
+        cqFront = -1;
+        cqRear = -1;
+    }
+    return job;
+}
+void scheduler()
+{
+    struct Job job;
+    while (!isArrivalEmpty())
+    {
+        enqueueCPU(dequeueArrival());
+    }
+    while (!isCPUEmpty())
+    {
+        job = dequeueCPU();
+        printf("Executing Job[%d] %s\n", job.id, job.name);
+
+        if (job.time > TIME_QUANTUM)
+        {
+            job.time = job.time - TIME_QUANTUM;
+            enqueueCPU(job);
+        }
+        else
+        {
+            job.time = 0;
+            history[hCount] = job;
+            hCount++;
+        }
+    }
+    printf("\nScheduling Completed\n");
+}
+void displayHistory()
+{
+    int i;
+    if (hCount == 0)
+    {
+        printf("No Jobs Completed\n");
+        return;
+    }
+    printf("\nJob Execution History:\n");
+    for (i = 0; i < hCount; i++)
+    {
+        printf("Job[%d] %s Priority:%d Completed\n",
+               history[i].id,
+               history[i].name,
+               history[i].priority);
+    }
+}
+int main()
+{
+    int ch;
+    do
+    {
+        printf("\n--- OS Job Scheduler ---\n");
+        printf("1. Add Job\n");
+        printf("2. Display Arrival Queue\n");
+        printf("3. Run Scheduler\n");
+        printf("4. Display Job History\n");
+        printf("5. Exit\n");
+        printf("Enter Choice: ");
+        scanf("%d", &ch);
+        switch (ch)
+        {
+        case 1:enqueueArrival();break;
+        case 2:displayArrival();break;
+        case 3:scheduler();break;
+        case 4:displayHistory();break;
+        case 5:break;
+        default:printf("Invalid Choice\n");
+        }
+    }
+    while(ch != 0);
+    return 0;
+}
