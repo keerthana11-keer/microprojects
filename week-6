@@ -1,0 +1,151 @@
+*WEEK-6 MICRO PROJECT*
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+struct Node
+{
+    int jobID;
+    char jobName[20];
+    int burstTime;
+    int priority;   // 1 = highest priority
+    struct Node *next;
+};
+
+struct Node *front = NULL;
+struct Node *rear = NULL;
+
+int totalInsertions = 0;
+int totalComparisons = 0;
+int executionOrder[100];
+int execIndex = 0;
+
+void insertJob()
+{
+    struct Node *newnode;
+    newnode = (struct Node*)malloc(sizeof(struct Node));
+    printf("Enter Job ID: ");
+    scanf("%d", &newnode->jobID);
+    printf("Enter Job Name: ");
+    scanf("%s", newnode->jobName);
+    printf("Enter Burst Time: ");
+    scanf("%d", &newnode->burstTime);
+    printf("Enter Priority (1 = highest): ");
+    scanf("%d", &newnode->priority);
+    newnode->next = NULL;
+    totalInsertions++;
+    if(rear == NULL)
+    {
+        front = rear = newnode;
+    }
+    else if(front->priority > newnode->priority)
+    {
+        newnode->next = front;
+        front = newnode;
+    }
+    else
+    {
+        struct Node *temp = front;
+        while(temp->next != NULL && temp->next->priority <= newnode->priority)
+        {
+            totalComparisons++;
+            temp = temp->next;
+        }
+        newnode->next = temp->next;
+        temp->next = newnode;
+        if(newnode->next == NULL)
+            rear = newnode;
+    }
+    printf("Job inserted successfully.\n");
+}
+void extractJob()
+{
+    if(front == NULL)
+    {
+        printf("No Jobs Available.\n");
+        return;
+    }
+    struct Node *temp = front;
+    printf("Executing Job ID:%d  Name:%s  Priority:%d  Burst:%d\n",
+           temp->jobID,
+           temp->jobName,
+           temp->priority,
+           temp->burstTime);
+    executionOrder[execIndex++] = temp->jobID;
+    front = front->next;
+    if(front == NULL)
+        rear = NULL;
+    free(temp);
+    printf("Remaining Jobs: ");
+    struct Node *t = front;
+    int count = 0;
+    while(t != NULL)
+    {
+        count++;
+        t = t->next;
+    }
+    printf("%d\n", count);
+}
+void displayQueue()
+{
+    if(front == NULL)
+    {
+        printf("Queue is empty.\n");
+        return;
+    }
+    struct Node *temp = front;
+    printf("\nPriority Queue (Front -> Rear):\n");
+    while(temp != NULL)
+    {
+        printf("ID:%d  Name:%s  Priority:%d  Burst:%d\n",
+               temp->jobID,
+               temp->jobName,
+               temp->priority,
+               temp->burstTime);
+
+        temp = temp->next;
+    }
+}
+void simulateCPU()
+{
+    if(front == NULL)
+    {
+        printf("No Jobs to Execute.\n");
+        return;
+    }
+    printf("\n===== CPU Execution Start =====\n");
+    while(front != NULL)
+    {
+        extractJob();
+    }
+    printf("===== CPU Execution Complete =====\n");
+    printf("\nExecution Order: ");
+    for(int i=0; i<execIndex; i++)
+        printf("%d ", executionOrder[i]);
+    printf("\nTotal Insertions: %d", totalInsertions);
+    printf("\nTotal Comparisons: %d\n", totalComparisons);
+}
+int main()
+{
+    int ch;
+    while(1)
+    {
+        printf("\n--- Priority-Based CPU Scheduler ---\n");
+        printf("1. Insert Job\n");
+        printf("2. Extract Highest Priority Job\n");
+        printf("3. Display Queue\n");
+        printf("4. Simulate CPU Execution\n");
+        printf("5. Exit\n");
+        printf("Enter Choice: ");
+        scanf("%d", &ch);
+        switch(ch)
+        {
+            case 1: insertJob(); break;
+            case 2: extractJob(); break;
+            case 3: displayQueue(); break;
+            case 4: simulateCPU(); break;
+            case 5: return 0;
+            default: printf("Invalid Choice\n");
+        }
+    }
+    return 0;
+}
