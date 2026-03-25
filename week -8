@@ -1,0 +1,242 @@
+// *WEEK-8 MICRO PROJECT*
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+struct Node
+{
+    int id;                 
+    char name[50];          
+    char block[50];         
+    int value;              
+    struct Node *left;
+    struct Node *right;
+};
+struct Node *root=NULL;
+void insert()
+{
+    struct Node *newnode;
+    newnode=(struct Node*)malloc(sizeof(struct Node));
+    printf("Enter Asset ID: ");
+    scanf("%d",&newnode->id);
+    printf("Enter Asset Name: ");
+    scanf("%s",newnode->name);
+    printf("Enter Block/Department: ");
+    scanf("%s",newnode->block);
+    printf("Enter Asset Value: ");
+    scanf("%d",&newnode->value);
+    newnode->left=NULL;
+    newnode->right=NULL;
+    if(root==NULL)
+        root=newnode;
+    else
+    {
+        struct Node *temp=root,*pre=NULL;
+        while(temp!=NULL)
+        {
+            pre=temp;
+            if(newnode->id <= temp->id)
+                temp=temp->left;
+            else
+                temp=temp->right;
+        }
+        if(newnode->id <= pre->id)
+            pre->left=newnode;
+        else
+            pre->right=newnode;
+    }
+}
+void inorder(struct Node *temp)
+{
+    if(temp==NULL)
+        return;
+    inorder(temp->left);
+    printf("ID:%d  Name:%s  Block:%s  Value:%d\n",
+    temp->id,temp->name,temp->block,temp->value);
+    inorder(temp->right);
+}
+void preorder(struct Node *temp)
+{
+    if(temp==NULL)
+        return;
+    printf("ID:%d  Name:%s  Block:%s  Value:%d\n",
+    temp->id,temp->name,temp->block,temp->value);
+    preorder(temp->left);
+    preorder(temp->right);
+}
+void postorder(struct Node *temp)
+{
+    if(temp==NULL)
+        return;
+    postorder(temp->left);
+    postorder(temp->right);
+    printf("ID:%d  Name:%s  Block:%s  Value:%d\n",
+    temp->id,temp->name,temp->block,temp->value);
+}
+void search()
+{
+    struct Node *temp=root;
+    int key,flag=0;
+    printf("Enter Asset ID to search: ");
+    scanf("%d",&key);
+    while(temp!=NULL)
+    {
+        if(key==temp->id)
+        {
+            printf("\nAsset Found\n");
+            printf("ID:%d\nName:%s\nBlock:%s\nValue:%d\n",
+            temp->id,temp->name,temp->block,temp->value);
+            flag=1;
+            break;
+        }
+        else if(key <= temp->id)
+            temp=temp->left;
+        else
+            temp=temp->right;
+    }
+    if(flag==0)
+        printf("Asset not found\n");
+}
+void maximum()
+{
+    if(root==NULL)
+        printf("Tree is empty\n");
+    else
+    {
+        struct Node *temp=root;
+        while(temp->right!=NULL)
+            temp=temp->right;
+        printf("Maximum Asset ID: %d\n",temp->id);
+    }
+}
+void minimum()
+{
+    if(root==NULL)
+        printf("Tree is empty\n");
+    else
+    {
+        struct Node *temp=root;
+        while(temp->left!=NULL)
+            temp=temp->left;
+        printf("Minimum Asset ID: %d\n",temp->id);
+    }
+}
+void deleteAsset()
+{
+    if(root==NULL)
+    {
+        printf("Tree is empty\n");
+        return;
+    }
+    int val;
+    printf("Enter Asset ID to delete: ");
+    scanf("%d",&val);
+    struct Node *temp=root,*pre=NULL;
+    while(temp!=NULL && val!=temp->id)
+    {
+        pre=temp;
+        if(val <= temp->id)
+            temp=temp->left;
+        else
+            temp=temp->right;
+    }
+    if(temp==NULL)
+    {
+        printf("Asset not found\n");
+        return;
+    }
+    if(temp->left==NULL && temp->right==NULL)
+    {
+        if(pre==NULL)
+            root=NULL;
+        else if(temp==pre->left)
+            pre->left=NULL;
+        else
+            pre->right=NULL;
+        free(temp);
+    }
+    else if(temp->left!=NULL && temp->right!=NULL)
+    {
+        struct Node *temp1=NULL,*pre1=temp;
+        temp1=temp->left;
+        while(temp1->right!=NULL)
+        {
+            pre1=temp1;
+            temp1=temp1->right;
+        }
+        temp->id=temp1->id;
+        strcpy(temp->name,temp1->name);
+        strcpy(temp->block,temp1->block);
+        temp->value=temp1->value;
+        if(pre1==temp)
+            pre1->left=temp1->left;
+        else
+            pre1->right=temp1->left;
+        free(temp1);
+    }
+    else
+    {
+        struct Node *child;
+        if(temp->left!=NULL)
+            child=temp->left;
+        else
+            child=temp->right;
+        if(pre==NULL)
+            root=child;
+        else if(pre->left==temp)
+            pre->left=child;
+        else
+            pre->right=child;
+        free(temp);
+    }
+}
+void valueRange(struct Node *temp,int x,int y)
+{
+    if(temp==NULL)
+        return;
+    valueRange(temp->left,x,y);
+    if(temp->value>=x && temp->value<=y)
+        printf("ID:%d Name:%s Value:%d\n",
+        temp->id,temp->name,temp->value);
+    valueRange(temp->right,x,y);
+}
+int main()
+{
+    int choice,x,y;
+    while(1)
+    {
+        printf("\n1.Insert Asset");
+        printf("\n2.Delete Asset");
+        printf("\n3.Inorder Display");
+        printf("\n4.Preorder Display");
+        printf("\n5.Postorder Display");
+        printf("\n6.Maximum Asset ID");
+        printf("\n7.Minimum Asset ID");
+        printf("\n8.Search Asset");
+        printf("\n9.Value Range Query");
+        printf("\n10.Exit");
+        printf("\nEnter choice: ");
+        scanf("%d",&choice);
+        switch(choice)
+        {
+            case 1: insert(); break;
+            case 2: deleteAsset(); break;
+            case 3: inorder(root); break;
+            case 4: preorder(root); break;
+            case 5: postorder(root); break;
+            case 6: maximum(); break;
+            case 7: minimum(); break;
+            case 8: search(); break;
+            case 9:
+                printf("Enter value range X Y: ");
+                scanf("%d%d",&x,&y);
+                valueRange(root,x,y);
+                break;
+            case 10:
+                printf("Exiting...\n");
+                return 0;
+            default:
+                printf("Invalid choice\n");
+        }
+    }
+    return 0;
+}
