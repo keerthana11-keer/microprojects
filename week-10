@@ -1,0 +1,323 @@
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+struct Node
+{
+    int id;
+    char name[50];
+    char dept[50];
+    float cgpa;
+    int height;
+    struct Node *left;
+    struct Node *right;
+};
+struct Node *root=NULL;
+
+int max(int a,int b)
+{
+    if(a>b) return a;
+    return b;
+}
+int height(struct Node *n)
+{
+    if(n==NULL)
+        return 0;
+    return n->height;
+}
+struct Node* createNode(int id,char name[],char dept[],float cgpa)
+{
+    struct Node *newnode=(struct Node*)malloc(sizeof(struct Node));
+    newnode->id=id;
+    strcpy(newnode->name,name);
+    strcpy(newnode->dept,dept);
+    newnode->cgpa=cgpa;
+    newnode->left=NULL;
+    newnode->right=NULL;
+    newnode->height=1;
+    return newnode;
+}
+struct Node* rightRotate(struct Node *y)
+{
+    struct Node *x=y->left;
+    struct Node *t2=x->right;
+    x->right=y;
+    y->left=t2;
+    y->height=max(height(y->left),height(y->right))+1;
+    x->height=max(height(x->left),height(x->right))+1;
+    return x;
+}
+struct Node* leftRotate(struct Node *x)
+{
+    struct Node *y=x->right;
+    struct Node *t2=y->left;
+    y->left=x;
+    x->right=t2;
+    x->height=max(height(x->left),height(x->right))+1;
+    y->height=max(height(y->left),height(y->right))+1;
+    return y;
+}
+int getBalance(struct Node *n)
+{
+    if(n==NULL)
+        return 0;
+
+    return height(n->left)-height(n->right);
+}
+struct Node* insert(struct Node *node,int id,char name[],char dept[],float cgpa)
+{
+    if(node==NULL)
+        return createNode(id,name,dept,cgpa);
+    if(id<node->id)
+        node->left=insert(node->left,id,name,dept,cgpa);
+    else if(id>node->id)
+        node->right=insert(node->right,id,name,dept,cgpa);
+    else
+        return node;
+    node->height=1+max(height(node->left),height(node->right));
+    int balance=getBalance(node);
+    if(balance>1 && id<node->left->id)
+        return rightRotate(node);
+    if(balance<-1 && id>node->right->id)
+        return leftRotate(node);
+    if(balance>1 && id>node->left->id)
+    {
+        node->left=leftRotate(node->left);
+        return rightRotate(node);
+    }
+    if(balance<-1 && id<node->right->id)
+    {
+        node->right=rightRotate(node->right);
+        return leftRotate(node);
+    }
+    return node;
+}
+void inorder(struct Node *temp)
+{
+    if(temp==NULL)
+        return;
+    inorder(temp->left);
+    printf("ID:%d Name:%s Dept:%s CGPA:%.2f\n",
+    temp->id,temp->name,temp->dept,temp->cgpa);
+    inorder(temp->right);
+}
+void preorder(struct Node *temp)
+{
+    if(temp==NULL)
+        return;
+    printf("ID:%d Name:%s Dept:%s CGPA:%.2f\n",
+    temp->id,temp->name,temp->dept,temp->cgpa);
+    preorder(temp->left);
+    preorder(temp->right);
+}
+void postorder(struct Node *temp)
+{
+    if(temp==NULL)
+        return;
+    postorder(temp->left);
+    postorder(temp->right);
+    printf("ID:%d Name:%s Dept:%s CGPA:%.2f\n",
+    temp->id,temp->name,temp->dept,temp->cgpa);
+}
+void search(struct Node *temp,int key)
+{
+    int cmp=0;
+    while(temp!=NULL)
+    {
+        cmp++;
+        if(key==temp->id)
+        {
+            printf("Student Found\n");
+            printf("ID:%d\nName:%s\nDept:%s\nCGPA:%.2f\n",
+            temp->id,temp->name,temp->dept,temp->cgpa);
+            printf("Comparisons: %d\n",cmp);
+            return;
+        }
+        if(key<temp->id)
+            temp=temp->left;
+        else
+            temp=temp->right;
+    }
+    printf("Student not found\n");
+    printf("Comparisons: %d\n",cmp);
+}
+struct Node* minNode(struct Node *node)
+{
+    struct Node *temp=node;
+    while(temp->left!=NULL)
+        temp=temp->left;
+    return temp;
+}
+struct Node* deleteNode(struct Node *root,int id)
+{
+    if(root==NULL)
+        return root;
+    if(id<root->id)
+        root->left=deleteNode(root->left,id);
+    else if(id>root->id)
+        root->right=deleteNode(root->right,id);
+    else
+    {
+        if(root->left==NULL || root->right==NULL)
+        {
+            struct Node *temp=root->left?root->left:root->right;
+            if(temp==NULL)
+            {
+                temp=root;
+                root=NULL;
+            }
+            else
+                *root=*temp;
+
+            free(temp);
+        }
+        else
+        {
+            struct Node *temp=minNode(root->right);
+            root->id=temp->id;
+            strcpy(root->name,temp->name);
+            strcpy(root->dept,temp->dept);
+            root->cgpa=temp->cgpa;
+            root->right=deleteNode(root->right,temp->id);
+        }
+    }
+    if(root==NULL)
+        return root;
+    root->height=1+max(height(root->left),height(root->right));
+    int balance=getBalance(root);
+    if(balance>1 && getBalance(root->left)>=0)
+        return rightRotate(root);
+    if(balance>1 && getBalance(root->left)<0)
+    {
+        root->left=leftRotate(root->left);
+        return rightRotate(root);
+    }
+    if(balance<-1 && getBalance(root->right)<=0)
+        return leftRotate(root);
+    if(balance<-1 && getBalance(root->right)>0)
+    {
+        root->right=rightRotate(root->right);
+        return leftRotate(root);
+    }
+    return root;
+}
+void predecessor(struct Node *root,int key)
+{
+    struct Node *pred=NULL;
+    while(root!=NULL)
+    {
+        if(key>root->id)
+        {
+            pred=root;
+            root=root->right;
+        }
+        else
+            root=root->left;
+    }
+    if(pred)
+        printf("Predecessor ID: %d\n",pred->id);
+    else
+        printf("No predecessor\n");
+}
+void successor(struct Node *root,int key)
+{
+    struct Node *succ=NULL;
+    while(root!=NULL)
+    {
+        if(key<root->id)
+        {
+            succ=root;
+            root=root->left;
+        }
+        else
+            root=root->right;
+    }
+    if(succ)
+        printf("Successor ID: %d\n",succ->id);
+    else
+        printf("No successor\n");
+}
+void rangeQuery(struct Node *root,int L,int R)
+{
+    if(root==NULL)
+        return;
+    if(root->id>L)
+        rangeQuery(root->left,L,R);
+    if(root->id>=L && root->id<=R)
+        printf("ID:%d Name:%s Dept:%s CGPA:%.2f\n",
+        root->id,root->name,root->dept,root->cgpa);
+
+    if(root->id<R)
+        rangeQuery(root->right,L,R);
+}
+int main()
+{
+    int ch,id,L,R;
+    char name[50],dept[50];
+    float cgpa;
+    while(1)
+    {
+        printf("\n1.Insert Student");
+        printf("\n2.Search Student");
+        printf("\n3.Delete Student");
+        printf("\n4.Inorder");
+        printf("\n5.Preorder");
+        printf("\n6.Postorder");
+        printf("\n7.Predecessor");
+        printf("\n8.Successor");
+        printf("\n9.Range Query");
+        printf("\n10.Exit");
+        printf("\nEnter choice: ");
+        scanf("%d",&ch);
+        switch(ch)
+        {
+            case 1:
+                printf("Enter ID: ");
+                scanf("%d",&id);
+                printf("Enter Name: ");
+                scanf("%s",name);
+                printf("Enter Dept: ");
+                scanf("%s",dept);
+                printf("Enter CGPA: ");
+                scanf("%f",&cgpa);
+                root=insert(root,id,name,dept,cgpa);
+                break;
+            case 2:
+                printf("Enter ID to search: ");
+                scanf("%d",&id);
+                search(root,id);
+                break;
+            case 3:
+                printf("Enter ID to delete: ");
+                scanf("%d",&id);
+                root=deleteNode(root,id);
+                break;
+            case 4:
+                inorder(root);
+                break;
+            case 5:
+                preorder(root);
+                break;
+            case 6:
+                postorder(root);
+                break;
+            case 7:
+                printf("Enter ID: ");
+                scanf("%d",&id);
+                predecessor(root,id);
+                break;
+            case 8:
+                printf("Enter ID: ");
+                scanf("%d",&id);
+                successor(root,id);
+                break;
+            case 9:
+                printf("Enter range L R: ");
+                scanf("%d%d",&L,&R);
+                rangeQuery(root,L,R);
+                break;
+            case 10:
+                return 0;
+        }
+    }
+}
